@@ -1,8 +1,12 @@
 const express = require('express');
 const uploadController = require('../controllers/uploadController');
 const uploadMiddleware = require('../middleware/uploadMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
 
 const router = express.Router();
+
+// Aplica autenticação em todas as rotas
+router.use(authMiddleware);
 
 router.post('/upload', uploadMiddleware, uploadController.handleUpload);
 

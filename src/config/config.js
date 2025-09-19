@@ -5,6 +5,9 @@ module.exports = {
         directus_api_url: process.env.DIRECTUS_API_URL,
         directus_api_token: process.env.DIRECTUS_API_TOKEN
     },
+    auth: {
+        bearer_token: process.env.API_BEARER_TOKEN
+    },
     server: {
         port: process.env.PORT
     },
