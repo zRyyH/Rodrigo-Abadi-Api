@@ -1,18 +1,17 @@
 const express = require('express');
-const config = require('./src/config/config');
-const uploadRoutes = require('./src/routes/upload');
 const disableCors = require('./src/middleware/corsMiddleware');
+const uploadRoutes = require('./src/routes/upload');
+const sqlRoutes = require('./src/routes/query');
+const { server } = require('./src/config/config');
 
 const app = express();
 
 app.use(disableCors);
+app.use(express.json());
 
 app.use('/api', uploadRoutes);
+app.use('/api/query', sqlRoutes);
 
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'OK' });
-});
-
-app.listen(config.server.port, () => {
-    console.log(`API rodando na porta ${config.server.port}`);
+app.listen(server.port, () => {
+    console.log(`🚀 Servidor rodando na porta ${server.port}`);
 });
