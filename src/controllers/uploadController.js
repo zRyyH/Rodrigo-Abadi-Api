@@ -11,8 +11,8 @@ exports.handleUpload = async (req, res) => {
         const nfesData = NfesService.parse(req.files.fileInvoices[0].buffer);
 
         const [salesResult, nfesResult] = await Promise.all([
-            salesData.length ? SalesService.upsert(salesData) : { created: 0, updated: 0 },
-            nfesData.length ? NfesService.upsert(nfesData) : { created: 0, updated: 0 }
+            salesData.length ? SalesService.upsert(salesData, req.directusToken) : { created: 0, updated: 0 },
+            nfesData.length ? NfesService.upsert(nfesData, req.directusToken) : { created: 0, updated: 0 }
         ]);
 
         res.json({

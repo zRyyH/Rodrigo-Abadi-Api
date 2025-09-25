@@ -9,8 +9,8 @@ class NfesService extends BaseService {
         });
     }
 
-    static async upsert(data) {
-        return await super.upsert(data, NFES_CONFIG.collection, NFES_CONFIG.uniqueField);
+    static async upsert(data, token) {
+        return await super.upsert(data, NFES_CONFIG.collection, NFES_CONFIG.uniqueField, token);
     }
 }
 

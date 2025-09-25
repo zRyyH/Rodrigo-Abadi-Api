@@ -1,14 +1,8 @@
 require('dotenv').config();
 
 module.exports = {
-    directus_api: {
-        directus_api_url: process.env.DIRECTUS_API_URL,
-        directus_api_token: process.env.DIRECTUS_API_TOKEN
-    },
-    auth: {
-        bearer_token: process.env.API_BEARER_TOKEN
-    },
     server: {
+        directus_url: process.env.DIRECTUS_API_URL,
         port: process.env.PORT
     },
     upload: {

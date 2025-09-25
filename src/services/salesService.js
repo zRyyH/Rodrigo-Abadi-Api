@@ -8,8 +8,8 @@ class SalesService extends BaseService {
         });
     }
 
-    static async upsert(data) {
-        return await super.upsert(data, SALES_CONFIG.collection, SALES_CONFIG.uniqueField);
+    static async upsert(data, token) {
+        return await super.upsert(data, SALES_CONFIG.collection, SALES_CONFIG.uniqueField, token);
     }
 }
 

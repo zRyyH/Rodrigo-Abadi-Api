@@ -1,4 +1,4 @@
-const { directus } = require('../config/directus');
+const { createDirectusClient } = require('../config/directus');
 const { createItems, readItems, updateItemsBatch } = require('@directus/sdk');
 const FileProcessor = require('../utils/fileProcessor');
 
@@ -11,9 +11,10 @@ class BaseService {
         });
     }
 
-    static async upsert(data, collection, uniqueField) {
+    static async upsert(data, collection, uniqueField, token) {
+        const directus = createDirectusClient(token);
         const uniqueValues = data.map(item => item[uniqueField]).filter(Boolean);
-        const batchSize = 25;
+        const batchSize = 30;
         const existingMap = new Map();
 
         for (let i = 0; i < uniqueValues.length; i += batchSize) {
