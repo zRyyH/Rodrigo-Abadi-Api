@@ -6,6 +6,6 @@ const router = express.Router();
 
 router.use(sqlAuthMiddleware);
 
-router.get('/:queryName', queryController.execute);
+router.get('/:category/:queryName', queryController.execute);
 
 module.exports = router;

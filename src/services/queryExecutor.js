@@ -2,11 +2,17 @@ const pool = require('../config/mysql');
 const queries = require('../queries');
 
 class QueryExecutor {
-    static async run(queryName, params = {}) {
-        const query = queries[queryName];
+    static async run(category, queryName, params = {}) {
+        const categoryQueries = queries[category];
+
+        if (!categoryQueries) {
+            throw new Error(`Categoria não encontrada: ${category}`);
+        }
+
+        const query = categoryQueries[queryName];
 
         if (!query) {
-            throw new Error(`Query não encontrada: ${queryName}`);
+            throw new Error(`Query não encontrada: ${category}/${queryName}`);
         }
 
         const queryParams = query.params.map(param => params[param]);
