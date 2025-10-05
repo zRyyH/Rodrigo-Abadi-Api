@@ -1,8 +1,8 @@
-const express = require('express');
 const disableCors = require('./src/middleware/corsMiddleware');
 const uploadRoutes = require('./src/routes/upload');
-const sqlRoutes = require('./src/routes/query');
 const { server } = require('./src/config/config');
+const sqlRoutes = require('./src/routes/query');
+const express = require('express');
 
 const app = express();
 
