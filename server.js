@@ -1,7 +1,6 @@
 const disableCors = require('./src/middleware/corsMiddleware');
 const uploadRoutes = require('./src/routes/upload');
-const { server } = require('./src/config/config');
-const sqlRoutes = require('./src/routes/query');
+const { api } = require('./src/constants/config');
 const express = require('express');
 
 const app = express();
@@ -10,8 +9,7 @@ app.use(disableCors);
 app.use(express.json());
 
 app.use('/api', uploadRoutes);
-app.use('/api/query', sqlRoutes);
 
-app.listen(server.port, () => {
-    console.log(`🚀 Servidor rodando na porta ${server.port}`);
+app.listen(api.port, () => {
+    console.log(`🚀 Servidor rodando na porta ${api.port}`);
 });
