@@ -1,11 +1,13 @@
 const rabbitmqService = require('../services/rabbitmqService');
 const DirectusFileService = require('../services/directusFileService');
+const { logger, logStart, logStep, logEnd, logErrorDetail } = require('../config/logger');
 
 exports.handleUpload = async (req, res) => {
     const { sales_xlsx, nfes_xlsx, xml_zip, pdf_zip } = req.files || {};
 
     // Validação: todos os arquivos são obrigatórios
     if (!sales_xlsx || !nfes_xlsx || !xml_zip || !pdf_zip) {
+        logger.error('Arquivos obrigatórios ausentes');
         return res.status(400).json({
             error: 'Envie todos os arquivos necessários: sales_xlsx, nfes_xlsx, xml_zip, pdf_zip',
             received: {
@@ -18,12 +20,12 @@ exports.handleUpload = async (req, res) => {
     }
 
     try {
-        console.log('📤 Iniciando upload dos arquivos para o Directus...');
+        logStart('PROCESSAMENTO DE UPLOAD');
 
-        // Criar instância do serviço de upload com o token do usuário
+        logStep(1, 3, 'Criando serviço Directus');
         const directusFileService = new DirectusFileService(req.directusToken);
 
-        // Fazer upload de todos os arquivos para o Directus
+        logStep(2, 3, 'Enviando 4 arquivos para Directus');
         const uploadedFiles = await directusFileService.uploadMultipleFiles({
             sales_xlsx,
             nfes_xlsx,
@@ -31,7 +33,7 @@ exports.handleUpload = async (req, res) => {
             pdf_zip
         });
 
-        // Preparar dados para enviar à fila (agora com links em vez de base64)
+        // Preparar dados para enviar à fila
         const filesData = {
             timestamp: new Date().toISOString(),
             userId: req.directusToken,
@@ -67,10 +69,10 @@ exports.handleUpload = async (req, res) => {
             }
         };
 
-        // Enviar para fila RabbitMQ
+        logStep(3, 3, 'Enviando para fila RabbitMQ');
         await rabbitmqService.sendToQueue(filesData);
 
-        console.log('✅ Arquivos enviados para processamento');
+        logEnd('PROCESSAMENTO DE UPLOAD', true);
 
         res.json({
             message: 'Arquivos enviados para processamento com sucesso',
@@ -101,7 +103,8 @@ exports.handleUpload = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ Erro ao processar arquivos:', error);
+        logEnd('PROCESSAMENTO DE UPLOAD', false);
+        logErrorDetail(error);
         res.status(500).json({
             error: 'Erro ao processar arquivos',
             details: error.message

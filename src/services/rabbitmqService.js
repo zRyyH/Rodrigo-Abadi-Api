@@ -1,4 +1,5 @@
 const config = require('../constants/config');
+const { logger, logResult } = require('../config/logger');
 const amqp = require('amqplib');
 
 class RabbitMQService {
@@ -16,15 +17,16 @@ class RabbitMQService {
             const { host, port, user, pass } = config.rabbitmq;
             const url = `amqp://${user}:${pass}@${host}:${port}`;
 
+            logger.info(`[RabbitMQ] Conectando em ${host}:${port}...`);
             this.connection = await amqp.connect(url);
 
             // eventos de conexão
             this.connection.on('error', (err) => {
-                console.error('❌ Connection error:', err);
+                logger.error(`[RabbitMQ] Connection error: ${err.message}`);
             });
 
             this.connection.on('close', () => {
-                console.warn('⚠️ Conexão fechada. Tentando reconectar em 5s...');
+                logger.warn('[RabbitMQ] Conexão fechada. Reconectando em 5s...');
                 setTimeout(() => this.connect(), 5000);
             });
 
@@ -32,19 +34,19 @@ class RabbitMQService {
 
             // eventos do canal
             this.channel.on('error', (err) => {
-                console.error('❌ Channel error:', err);
+                logger.error(`[RabbitMQ] Channel error: ${err.message}`);
             });
 
             this.channel.on('close', () => {
-                console.warn('⚠️ Canal fechado.');
+                logger.warn('[RabbitMQ] Canal fechado');
             });
 
             await this.channel.assertQueue(config.rabbitmq.queue, { durable: true });
 
-            console.log('✅ Conectado ao RabbitMQ');
+            logResult('RabbitMQ conectado', `Queue: ${config.rabbitmq.queue}`);
         } catch (error) {
-            console.error('❌ Erro ao conectar ao RabbitMQ:', error);
-            console.warn('⚠️ Tentando reconectar em 5s...');
+            logger.error(`[RabbitMQ] Falha na conexão: ${error.message}`);
+            logger.warn('[RabbitMQ] Reconectando em 5s...');
             setTimeout(() => this.connect(), 5000);
         } finally {
             this.isConnecting = false;
@@ -54,10 +56,12 @@ class RabbitMQService {
     async sendToQueue(data) {
         try {
             if (!this.channel) {
+                logger.info('[RabbitMQ] Canal não disponível, conectando...');
                 await this.connect();
             }
 
             const message = Buffer.from(JSON.stringify(data));
+            const messageSize = (message.length / 1024).toFixed(2);
 
             const sent = this.channel.sendToQueue(
                 config.rabbitmq.queue,
@@ -66,16 +70,17 @@ class RabbitMQService {
             );
 
             if (!sent) {
-                console.warn('⚠️ Buffer cheio. Mensagem pode não ter sido enviada.');
+                logger.warn('[RabbitMQ] Buffer cheio, mensagem pode não ter sido enviada');
+            } else {
+                logResult('Mensagem enviada para fila', `${messageSize} KB`);
             }
 
-            console.log('✅ Mensagem enviada para fila');
             return true;
         } catch (error) {
-            console.error('❌ Erro ao enviar para fila:', error);
-            console.warn('⚠️ Tentando reconectar e reenviar...');
+            logger.error(`[RabbitMQ] Falha ao enviar mensagem: ${error.message}`);
+            logger.warn('[RabbitMQ] Reconectando e reenviando...');
             await this.connect();
-            return this.sendToQueue(data); // tenta reenviar
+            return this.sendToQueue(data);
         }
     }
 
@@ -83,9 +88,9 @@ class RabbitMQService {
         try {
             if (this.channel) await this.channel.close();
             if (this.connection) await this.connection.close();
-            console.log('✅ Conexão RabbitMQ fechada');
+            logger.info('[RabbitMQ] Conexão fechada');
         } catch (error) {
-            console.error('❌ Erro ao fechar conexão:', error);
+            logger.error(`[RabbitMQ] Erro ao fechar conexão: ${error.message}`);
         }
     }
 }

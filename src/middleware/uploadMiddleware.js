@@ -1,5 +1,6 @@
 const multer = require('multer');
 const config = require('../constants/config');
+const { logger } = require('../config/logger');
 
 const storage = multer.memoryStorage();
 
@@ -13,6 +14,7 @@ const upload = multer({
         const isAllowed = allowedMimeTypes.includes(file.mimetype);
 
         if (!isAllowed) {
+            logger.warn(`[Upload] Tipo não permitido: ${file.mimetype} (${file.originalname})`);
             return cb(new Error(`Tipo de arquivo não permitido: ${file.mimetype}`));
         }
 

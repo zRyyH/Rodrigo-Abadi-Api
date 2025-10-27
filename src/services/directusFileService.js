@@ -1,5 +1,6 @@
 const { createDirectusClient } = require('../config/directus');
 const { directusApi } = require('../constants/config');
+const { logger, logResult } = require('../config/logger');
 const FormData = require('form-data');
 const axios = require('axios');
 
@@ -13,10 +14,15 @@ class DirectusFileService {
         try {
             const hoje = new Date();
             const formData = new FormData();
+            const finalFilename = `${hoje.toLocaleDateString('pt-BR').replace(/\//g, '-')}-${filename}`;
+
             formData.append('file', fileBuffer, {
-                filename: `${hoje.toLocaleDateString('pt-BR').replace(/\//g, '-')}-${filename}`,
+                filename: finalFilename,
                 contentType: mimetype,
             });
+
+            const sizeKB = (fileBuffer.length / 1024).toFixed(2);
+            logger.info(`Uploading: ${filename} (${sizeKB} KB)`);
 
             // Upload usando axios
             const response = await axios.post(`${directusApi.url}/files`, formData, {
@@ -29,8 +35,7 @@ class DirectusFileService {
             });
 
             const fileData = response.data.data;
-
-            console.log(`✅ Arquivo ${filename} enviado para Directus`);
+            logResult(filename, `ID: ${fileData.id}`);
 
             return {
                 id: fileData.id,
@@ -42,7 +47,7 @@ class DirectusFileService {
             };
         } catch (error) {
             const errorMsg = error.response?.data || error.message;
-            console.error(`❌ Erro ao fazer upload do arquivo ${filename}:`, errorMsg);
+            logger.error(`Upload falhou: ${filename} - ${JSON.stringify(errorMsg)}`);
             throw new Error(`Falha no upload do arquivo ${filename}: ${JSON.stringify(errorMsg)}`);
         }
     }
@@ -56,7 +61,7 @@ class DirectusFileService {
         const uploadedFiles = {};
 
         for (const [fieldName, fileArray] of Object.entries(files)) {
-            const file = fileArray[0]; // Pega o primeiro arquivo de cada campo
+            const file = fileArray[0];
 
             const uploadResult = await this.uploadFile(
                 file.buffer,
